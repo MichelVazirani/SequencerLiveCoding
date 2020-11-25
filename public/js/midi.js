@@ -94,7 +94,7 @@ function onMIDIInit( midi ) {
   midiAccess = midi;
   selectMIDIIn=document.getElementById("midiIn");
   selectMIDIOut=document.getElementById("midiOut");
-  
+
   // clear the MIDI input select
   selectMIDIIn.options.length = 0;
   selectMIDIOut.options.length = 0;
@@ -163,7 +163,7 @@ function onMIDIInit( midi ) {
   }
   selectMIDIIn.onchange = changeMIDIIn;
   selectMIDIOut.onchange = changeMIDIOut;
-  
+
   setActiveInstrument( 0 );
   updateActiveInstruments();
 
@@ -190,7 +190,7 @@ function onMIDISystemError( msg ) {
   console.log( "Error encountered:" + msg );
 }
 //init: start up MIDI
-window.addEventListener('load', function() {   
+window.addEventListener('load', function() {
   navigator.requestMIDIAccess().then( onMIDIInit, onMIDISystemError );
 });
 
@@ -281,7 +281,7 @@ function toggleBeat(rhythmIndex) {
 
 /* // not sure if we want to play notes when toggling on MIDI device
     var note = notes[rhythmIndex];
-    
+
     if (note) {
         switch(instrumentIndex) {
         case 0:  // Kick
@@ -297,15 +297,15 @@ function toggleBeat(rhythmIndex) {
           playNote(currentKit.hihatBuffer, true, 0.5*rhythmIndex - 4, 0, -1.0, theBeat.effectMix, volumes[note] * 0.7, hihatPitch, 0);
           break;
 
-        case 3:  // Tom 1   
+        case 3:  // Tom 1
           playNote(currentKit.tom1, false, 0,0,-2, theBeat.effectMix, volumes[note] * 0.6, tom1Pitch, 0);
           break;
 
-        case 4:  // Tom 2   
+        case 4:  // Tom 2
           playNote(currentKit.tom2, false, 0,0,-2, theBeat.effectMix, volumes[note] * 0.6, tom2Pitch, 0);
           break;
 
-        case 5:  // Tom 3   
+        case 5:  // Tom 3
           playNote(currentKit.tom3, false, 0,0,-2, theBeat.effectMix, volumes[note] * 0.6, tom3Pitch, 0);
           break;
         }
@@ -413,3 +413,7 @@ function controller(number, data) {
 
   }
 }
+
+
+
+exports.hideBeat = hideBeat
