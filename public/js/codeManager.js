@@ -1,4 +1,4 @@
-const beat_profs = require('./beat_profiles');
+const beat_profs = require('./beatProfiles');
 
 exports.bootCodeMirror = function() {
 

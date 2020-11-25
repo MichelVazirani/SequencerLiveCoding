@@ -1,10 +1,11 @@
-const beat_profs = require('./beat_profiles');
+const beat_profs = require('./beatProfiles');
+const irMod = require('./impulseResponse')
 
 function startLoadingAssets() {
-    impulseResponseList = new Array();
+    irMod.impulseResponseList = new Array();
 
-    for (i = 0; i < impulseResponseInfoList.length; i++) {
-        impulseResponseList[i] = new ImpulseResponse(impulseResponseInfoList[i].url, i);
+    for (i = 0; i < irMod.impulseResponseInfoList.length; i++) {
+        irMod.impulseResponseList[i] = new irMod.ImpulseResponse(irMod.impulseResponseInfoList[i].url, i);
     }
 
     // Initialize drum kits
@@ -16,7 +17,7 @@ function startLoadingAssets() {
 
     // Start loading the assets used by the presets first, in order of the presets.
     for (var demoIndex = 0; demoIndex < 5; ++demoIndex) {
-        var effect = impulseResponseList[beat_profs.beatDemo[demoIndex].effectIndex];
+        var effect = irMod.impulseResponseList[beat_profs.beatDemo[demoIndex].effectIndex];
         var kit = kits[beat_profs.beatDemo[demoIndex].kitIndex];
 
         // These effects and kits will keep track of a particular demo, so we can change
@@ -35,8 +36,8 @@ function startLoadingAssets() {
     }
 
     // Start at 1 to skip "No Effect"
-    for (i = 1; i < impulseResponseInfoList.length; i++) {
-        impulseResponseList[i].load();
+    for (i = 1; i < irMod.impulseResponseInfoList.length; i++) {
+        irMod.impulseResponseList[i].load();
     }
 
     // Setup initial drumkit
@@ -229,7 +230,7 @@ function initButtons() {
 
 function makeEffectList() {
     var elList = document.getElementById('effectlist');
-    var numEffects = impulseResponseInfoList.length;
+    var numEffects = irMod.impulseResponseInfoList.length;
 
 
     var elItem = document.createElement('li');
@@ -238,7 +239,7 @@ function makeEffectList() {
 
     for (var i = 0; i < numEffects; i++) {
         var elItem = document.createElement('li');
-        elItem.innerHTML = impulseResponseInfoList[i].name;
+        elItem.innerHTML = irMod.impulseResponseInfoList[i].name;
         elList.appendChild(elItem);
         elItem.addEventListener("mousedown", handleEffectMouseDown, true);
     }
