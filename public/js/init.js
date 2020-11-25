@@ -1,5 +1,7 @@
-const beat_profs = require('./beatProfiles');
+const drums = require('./drummachine')
+const beatProfs = require('./beatProfiles');
 const irMod = require('./impulseResponse')
+const kitMod = require('./kit')
 
 function startLoadingAssets() {
     irMod.impulseResponseList = new Array();
@@ -9,16 +11,16 @@ function startLoadingAssets() {
     }
 
     // Initialize drum kits
-    var numKits = kitName.length;
-    kits = new Array(numKits);
+    var numKits = kitMod.kitName.length;
+    kitMod.kits = new Array(numKits);
     for (var i  = 0; i < numKits; i++) {
-        kits[i] = new Kit(kitName[i]);
+        kitMod.kits[i] = new kitMod.Kit(kitMod.kitName[i]);
     }
 
     // Start loading the assets used by the presets first, in order of the presets.
     for (var demoIndex = 0; demoIndex < 5; ++demoIndex) {
-        var effect = irMod.impulseResponseList[beat_profs.beatDemo[demoIndex].effectIndex];
-        var kit = kits[beat_profs.beatDemo[demoIndex].kitIndex];
+        var effect = irMod.impulseResponseList[beatProfs.beatDemo[demoIndex].effectIndex];
+        var kit = kitMod.kits[beatProfs.beatDemo[demoIndex].kitIndex];
 
         // These effects and kits will keep track of a particular demo, so we can change
         // the loading status in the UI.
@@ -32,7 +34,7 @@ function startLoadingAssets() {
     // Then load the remaining assets.
     // Note that any assets which have previously started loading will be skipped over.
     for (var i  = 0; i < numKits; i++) {
-        kits[i].load();
+        kitMod.kits[i].load();
     }
 
     // Start at 1 to skip "No Effect"
@@ -41,7 +43,7 @@ function startLoadingAssets() {
     }
 
     // Setup initial drumkit
-    currentKit = kits[kInitialKitIndex];
+    kitMod.currentKit = kitMod.kits[kitMod.kInitialKitIndex];
 }
 
 function demoButtonURL(demoIndex) {
@@ -62,7 +64,7 @@ function showDemoAvailable(demoIndex /* zero-based */) {
     // Enable play button and assign it to demo 2.
     if (demoIndex == 1) {
         showPlayAvailable();
-        loadBeat(beat_profs.beatDemo[1]);
+        loadBeat(beatProfs.beatDemo[1]);
 
     // Uncomment to allow autoplay
     //     handlePlay();
@@ -79,28 +81,28 @@ exports.initDrums = function() {
 
     // Let the beat demos know when all of their assets have been loaded.
     // Add some new methods to support this.
-    for (var i = 0; i < beat_profs.beatDemo.length; ++i) {
-        beat_profs.beatDemo[i].index = i;
-        beat_profs.beatDemo[i].isKitLoaded = false;
-        beat_profs.beatDemo[i].isEffectLoaded = false;
+    for (var i = 0; i < beatProfs.beatDemo.length; ++i) {
+        beatProfs.beatDemo[i].index = i;
+        beatProfs.beatDemo[i].isKitLoaded = false;
+        beatProfs.beatDemo[i].isEffectLoaded = false;
 
-        beat_profs.beatDemo[i].setKitLoaded = function() {
+        beatProfs.beatDemo[i].setKitLoaded = function() {
             this.isKitLoaded = true;
             this.checkIsLoaded();
         };
 
-        beat_profs.beatDemo[i].setEffectLoaded = function() {
+        beatProfs.beatDemo[i].setEffectLoaded = function() {
             this.isEffectLoaded = true;
             this.checkIsLoaded();
         };
 
-        beat_profs.beatDemo[i].checkIsLoaded = function() {
+        beatProfs.beatDemo[i].checkIsLoaded = function() {
             if (this.isLoaded()) {
                 showDemoAvailable(this.index);
             }
         };
 
-        beat_profs.beatDemo[i].isLoaded = function() {
+        beatProfs.beatDemo[i].isLoaded = function() {
             return this.isKitLoaded && this.isEffectLoaded;
         };
     }
@@ -221,7 +223,7 @@ function initButtons() {
     var elButton;
 
     for (i = 0; i < loopLength; ++i) {
-        for (j = 0; j < kNumInstruments; j++) {
+        for (j = 0; j < drums.kNumInstruments; j++) {
                 elButton = document.getElementById(instruments[j] + '_' + i);
                 elButton.addEventListener("mousedown", handleButtonMouseDown, true);
         }

@@ -1,3 +1,4 @@
+const beatProfs = require('./beatProfiles')
 
 var impulseResponseInfoList = [
     // Impulse responses - each one represents a unique linear effect.
@@ -49,7 +50,7 @@ function loadedImpulseResponse(buffer) {
     this.isLoaded_ = true;
 
     if (this.demoIndex != -1) {
-        beatDemo[this.demoIndex].setEffectLoaded();
+        beatProfs.beatDemo[this.demoIndex].setEffectLoaded();
     }
 }
 
