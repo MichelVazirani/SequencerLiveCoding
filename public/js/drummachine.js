@@ -1,4 +1,6 @@
 const synthmod = require('./synthesis');
+const initmod = require('./init');
+const beat_profs = require('./beat_profiles');
 
 // Events
 // init() once the page has finished loading.
@@ -30,14 +32,7 @@ var kMaxSwing = .08;
 
 var currentKit;
 
-var beatReset = {"kitIndex":0,"effectIndex":0,"tempo":100,"swingFactor":0,"effectMix":0.25,"kickPitchVal":0.5,"snarePitchVal":0.5,"hihatPitchVal":0.5,"tom1PitchVal":0.5,"tom2PitchVal":0.5,"tom3PitchVal":0.5,"rhythm1":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"rhythm2":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"rhythm3":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"rhythm4":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"rhythm5":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"rhythm6":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]};
-var beatDemo = [
-    {"kitIndex":13,"effectIndex":18,"tempo":120,"swingFactor":0,"effectMix":0.19718309859154926,"kickPitchVal":0.5,"snarePitchVal":0.5,"hihatPitchVal":0.5,"tom1PitchVal":0.5,"tom2PitchVal":0.5,"tom3PitchVal":0.5,"rhythm1":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"rhythm2":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"rhythm3":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"rhythm4":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"rhythm5":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"rhythm6":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
-    {"kitIndex":4,"effectIndex":12,"tempo":100,"swingFactor":0,"effectMix":0.2,"kickPitchVal":0.46478873239436624,"snarePitchVal":0.45070422535211263,"hihatPitchVal":0.15492957746478875,"tom1PitchVal":0.7183098591549295,"tom2PitchVal":0.704225352112676,"tom3PitchVal":0.8028169014084507,"rhythm1":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"rhythm2":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"rhythm3":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"rhythm4":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"rhythm5":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"rhythm6":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
-    {"kitIndex":2,"effectIndex":5,"tempo":100,"swingFactor":0,"effectMix":0.25,"kickPitchVal":0.5,"snarePitchVal":0.5,"hihatPitchVal":0.5211267605633803,"tom1PitchVal":0.23943661971830987,"tom2PitchVal":0.21126760563380287,"tom3PitchVal":0.2535211267605634,"rhythm1":[2,0,0,0,2,0,0,0,2,0,0,0,2,0,0,0],"rhythm2":[0,0,0,0,2,0,0,0,0,0,0,0,2,0,0,0],"rhythm3":[0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0],"rhythm4":[1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1],"rhythm5":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0],"rhythm6":[0,0,1,0,1,0,0,2,0,2,0,0,1,0,0,0]},
-    {"kitIndex":1,"effectIndex":4,"tempo":120,"swingFactor":0,"effectMix":0.25,"kickPitchVal":0.7887323943661972,"snarePitchVal":0.49295774647887325,"hihatPitchVal":0.5,"tom1PitchVal":0.323943661971831,"tom2PitchVal":0.3943661971830986,"tom3PitchVal":0.323943661971831,"rhythm1":[2,0,0,0,0,0,0,2,2,0,0,0,0,0,0,1],"rhythm2":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"rhythm3":[0,0,1,0,2,0,1,0,1,0,1,0,2,0,2,0],"rhythm4":[2,0,2,0,0,0,0,0,2,0,0,0,0,2,0,0],"rhythm5":[0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0],"rhythm6":[0,2,0,0,0,2,0,0,0,2,0,0,0,0,0,0]},
-    {"kitIndex":0,"effectIndex":1,"tempo":60,"swingFactor":0.5419847328244275,"effectMix":0.25,"kickPitchVal":0.5,"snarePitchVal":0.5,"hihatPitchVal":0.5,"tom1PitchVal":0.5,"tom2PitchVal":0.5,"tom3PitchVal":0.5,"rhythm1":[2,2,0,1,2,2,0,1,2,2,0,1,2,2,0,1],"rhythm2":[0,0,2,0,0,0,2,0,0,0,2,0,0,0,2,0],"rhythm3":[2,1,1,1,2,1,1,1,2,1,1,1,2,1,1,1],"rhythm4":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"rhythm5":[0,0,1,0,0,1,0,1,0,0,1,0,0,0,1,0],"rhythm6":[1,0,0,1,0,1,0,1,1,0,0,1,1,1,1,0]},
-];
+
 
 exports.setBeat = function(newBeat) {
     theBeat = newBeat
@@ -81,7 +76,7 @@ function isValidBeat(beat) {
 
 // theBeat is the object representing the current beat/groove
 // ... it is saved/loaded via JSON
-var theBeat = cloneBeat(beatReset);
+var theBeat = cloneBeat(beat_profs.beatReset);
 
 kickPitch = snarePitch = hihatPitch = tom1Pitch = tom2Pitch = tom3Pitch = 0;
 
@@ -291,262 +286,6 @@ ImpulseResponse.prototype.load = function() {
     }
 
     request.send();
-}
-
-function startLoadingAssets() {
-    impulseResponseList = new Array();
-
-    for (i = 0; i < impulseResponseInfoList.length; i++) {
-        impulseResponseList[i] = new ImpulseResponse(impulseResponseInfoList[i].url, i);
-    }
-
-    // Initialize drum kits
-    var numKits = kitName.length;
-    kits = new Array(numKits);
-    for (var i  = 0; i < numKits; i++) {
-        kits[i] = new Kit(kitName[i]);
-    }
-
-    // Start loading the assets used by the presets first, in order of the presets.
-    for (var demoIndex = 0; demoIndex < 5; ++demoIndex) {
-        var effect = impulseResponseList[beatDemo[demoIndex].effectIndex];
-        var kit = kits[beatDemo[demoIndex].kitIndex];
-
-        // These effects and kits will keep track of a particular demo, so we can change
-        // the loading status in the UI.
-        effect.setDemoIndex(demoIndex);
-        kit.setDemoIndex(demoIndex);
-
-        effect.load();
-        kit.load();
-    }
-
-    // Then load the remaining assets.
-    // Note that any assets which have previously started loading will be skipped over.
-    for (var i  = 0; i < numKits; i++) {
-        kits[i].load();
-    }
-
-    // Start at 1 to skip "No Effect"
-    for (i = 1; i < impulseResponseInfoList.length; i++) {
-        impulseResponseList[i].load();
-    }
-
-    // Setup initial drumkit
-    currentKit = kits[kInitialKitIndex];
-}
-
-function demoButtonURL(demoIndex) {
-    var n = demoIndex + 1;
-    var demoName = "demo" + n;
-    var url = "images/btn_" + demoName + ".png";
-    return url;
-}
-
-// This gets rid of the loading spinner in each of the demo buttons.
-function showDemoAvailable(demoIndex /* zero-based */) {
-    var url = demoButtonURL(demoIndex);
-    var n = demoIndex + 1;
-    var demoName = "demo" + n;
-    var demo = document.getElementById(demoName);
-    demo.src = url;
-
-    // Enable play button and assign it to demo 2.
-    if (demoIndex == 1) {
-        showPlayAvailable();
-        loadBeat(beatDemo[1]);
-
-    // Uncomment to allow autoplay
-    //     handlePlay();
-    }
-}
-
-// This gets rid of the loading spinner on the play button.
-function showPlayAvailable() {
-    var play = document.getElementById("play");
-    play.src = "images/btn_play.png";
-}
-
-exports.initDrums = function() {
-
-    // Let the beat demos know when all of their assets have been loaded.
-    // Add some new methods to support this.
-    for (var i = 0; i < beatDemo.length; ++i) {
-        beatDemo[i].index = i;
-        beatDemo[i].isKitLoaded = false;
-        beatDemo[i].isEffectLoaded = false;
-
-        beatDemo[i].setKitLoaded = function() {
-            this.isKitLoaded = true;
-            this.checkIsLoaded();
-        };
-
-        beatDemo[i].setEffectLoaded = function() {
-            this.isEffectLoaded = true;
-            this.checkIsLoaded();
-        };
-
-        beatDemo[i].checkIsLoaded = function() {
-            if (this.isLoaded()) {
-                showDemoAvailable(this.index);
-            }
-        };
-
-        beatDemo[i].isLoaded = function() {
-            return this.isKitLoaded && this.isEffectLoaded;
-        };
-    }
-
-    startLoadingAssets();
-
-    // NOTE: THIS NOW RELIES ON THE MONKEYPATCH LIBRARY TO LOAD
-    // IN CHROME AND SAFARI (until they release unprefixed)
-    context = new AudioContext();
-
-    var finalMixNode;
-    if (context.createDynamicsCompressor) {
-        // Create a dynamics compressor to sweeten the overall mix.
-        compressor = context.createDynamicsCompressor();
-        compressor.connect(context.destination);
-        finalMixNode = compressor;
-    } else {
-        // No compressor available in this implementation.
-        finalMixNode = context.destination;
-    }
-
-    // create master filter node
-    filterNode = context.createBiquadFilter();
-    filterNode.type = "lowpass";
-    filterNode.frequency.value = 0.5 * context.sampleRate;
-    filterNode.Q.value = 1;
-    filterNode.connect(finalMixNode);
-
-    // Create master volume.
-    masterGainNode = context.createGain();
-    masterGainNode.gain.value = 0.7; // reduce overall volume to avoid clipping
-    masterGainNode.connect(filterNode);
-
-    // Create effect volume.
-    effectLevelNode = context.createGain();
-    effectLevelNode.gain.value = 1.0; // effect level slider controls this
-    effectLevelNode.connect(masterGainNode);
-
-    // Create convolver for effect
-    convolver = context.createConvolver();
-    convolver.connect(effectLevelNode);
-
-
-    var elKitCombo = document.getElementById('kitcombo');
-    elKitCombo.addEventListener("mousedown", handleKitComboMouseDown, true);
-
-    var elEffectCombo = document.getElementById('effectcombo');
-    elEffectCombo.addEventListener("mousedown", handleEffectComboMouseDown, true);
-
-    document.body.addEventListener("mousedown", handleBodyMouseDown, true);
-
-    initControls();
-    updateControls();
-
-    var timerWorkerBlob = new Blob([
-        "var timeoutID=0;function schedule(){timeoutID=setTimeout(function(){postMessage('schedule'); schedule();},100);} onmessage = function(e) { if (e.data == 'start') { if (!timeoutID) schedule();} else if (e.data == 'stop') {if (timeoutID) clearTimeout(timeoutID); timeoutID=0;};}"]);
-
-    // Obtain a blob URL reference to our worker 'file'.
-    var timerWorkerBlobURL = window.URL.createObjectURL(timerWorkerBlob);
-
-    timerWorker = new Worker(timerWorkerBlobURL);
-    timerWorker.onmessage = function(e) {
-      schedule();
-    };
-    timerWorker.postMessage('init'); // Start the worker.
-
-}
-
-function initControls() {
-    // Initialize note buttons
-    initButtons();
-    makeKitList();
-    makeEffectList();
-
-    // sliders
-    document.getElementById('effect_thumb').addEventListener('mousedown', handleSliderMouseDown, true);
-    document.getElementById('tom1_thumb').addEventListener('mousedown', handleSliderMouseDown, true);
-    document.getElementById('tom2_thumb').addEventListener('mousedown', handleSliderMouseDown, true);
-    document.getElementById('tom3_thumb').addEventListener('mousedown', handleSliderMouseDown, true);
-    document.getElementById('hihat_thumb').addEventListener('mousedown', handleSliderMouseDown, true);
-    document.getElementById('snare_thumb').addEventListener('mousedown', handleSliderMouseDown, true);
-    document.getElementById('kick_thumb').addEventListener('mousedown', handleSliderMouseDown, true);
-    document.getElementById('swing_thumb').addEventListener('mousedown', handleSliderMouseDown, true);
-
-    document.getElementById('effect_thumb').addEventListener('dblclick', handleSliderDoubleClick, true);
-    document.getElementById('tom1_thumb').addEventListener('dblclick', handleSliderDoubleClick, true);
-    document.getElementById('tom2_thumb').addEventListener('dblclick', handleSliderDoubleClick, true);
-    document.getElementById('tom3_thumb').addEventListener('dblclick', handleSliderDoubleClick, true);
-    document.getElementById('hihat_thumb').addEventListener('dblclick', handleSliderDoubleClick, true);
-    document.getElementById('snare_thumb').addEventListener('dblclick', handleSliderDoubleClick, true);
-    document.getElementById('kick_thumb').addEventListener('dblclick', handleSliderDoubleClick, true);
-    document.getElementById('swing_thumb').addEventListener('dblclick', handleSliderDoubleClick, true);
-
-    // tool buttons
-    document.getElementById('play').addEventListener('mousedown', handlePlay, true);
-    document.getElementById('stop').addEventListener('mousedown', handleStop, true);
-    document.getElementById('save').addEventListener('mousedown', handleSave, true);
-    document.getElementById('save_ok').addEventListener('mousedown', handleSaveOk, true);
-    document.getElementById('load').addEventListener('mousedown', handleLoad, true);
-    document.getElementById('load_ok').addEventListener('mousedown', handleLoadOk, true);
-    document.getElementById('load_cancel').addEventListener('mousedown', handleLoadCancel, true);
-    document.getElementById('reset').addEventListener('mousedown', handleReset, true);
-    document.getElementById('demo1').addEventListener('mousedown', handleDemoMouseDown, true);
-    document.getElementById('demo2').addEventListener('mousedown', handleDemoMouseDown, true);
-    document.getElementById('demo3').addEventListener('mousedown', handleDemoMouseDown, true);
-    document.getElementById('demo4').addEventListener('mousedown', handleDemoMouseDown, true);
-    document.getElementById('demo5').addEventListener('mousedown', handleDemoMouseDown, true);
-
-    var elBody = document.getElementById('body');
-    elBody.addEventListener('mousemove', handleMouseMove, true);
-    elBody.addEventListener('mouseup', handleMouseUp, true);
-
-    document.getElementById('tempoinc').addEventListener('mousedown', tempoIncrease, true);
-    document.getElementById('tempodec').addEventListener('mousedown', tempoDecrease, true);
-}
-
-function initButtons() {
-    var elButton;
-
-    for (i = 0; i < loopLength; ++i) {
-        for (j = 0; j < kNumInstruments; j++) {
-                elButton = document.getElementById(instruments[j] + '_' + i);
-                elButton.addEventListener("mousedown", handleButtonMouseDown, true);
-        }
-    }
-}
-
-function makeEffectList() {
-    var elList = document.getElementById('effectlist');
-    var numEffects = impulseResponseInfoList.length;
-
-
-    var elItem = document.createElement('li');
-    elItem.innerHTML = 'None';
-    elItem.addEventListener("mousedown", handleEffectMouseDown, true);
-
-    for (var i = 0; i < numEffects; i++) {
-        var elItem = document.createElement('li');
-        elItem.innerHTML = impulseResponseInfoList[i].name;
-        elList.appendChild(elItem);
-        elItem.addEventListener("mousedown", handleEffectMouseDown, true);
-    }
-}
-
-function makeKitList() {
-    var elList = document.getElementById('kitlist');
-    var numKits = kitName.length;
-
-    for (var i = 0; i < numKits; i++) {
-        var elItem = document.createElement('li');
-        elItem.innerHTML = kitNamePretty[i];
-        elList.appendChild(elItem);
-        elItem.addEventListener("mousedown", handleKitMouseDown, true);
-    }
 }
 
 function advanceNote() {
@@ -1098,12 +837,12 @@ function toggleLoadContainer() {
 
 function handleReset(event) {
     handleStop();
-    loadBeat(beatReset);
+    loadBeat(beat_profs.beatReset);
 }
 
 function loadBeat(beat) {
     // Check that assets are loaded.
-    if (beat != beatReset && !beat.isLoaded())
+    if (beat != beat_profs.beatReset && !beat.isLoaded())
         return false;
 
     handleStop();
