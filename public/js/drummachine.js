@@ -147,6 +147,7 @@ function playNote(buffer, pan, x, y, z, sendGain, mainGain, playbackRate, noteTi
 }
 
 function schedule() {
+    console.log(context)
     var currentTime = context.currentTime;
 
     // The sequence starts at startTime, so normalize currentTime so that it's 0 at the start of the sequence.
@@ -359,7 +360,30 @@ function setFilterQ( Q ) {
 
 
 
+function setContext(c) {
+    context = c
+}
 
+function setTimerWorker(t) {
+    timerWorker = t
+}
+
+
+// exports.printContext = printContext
+exports.setContext = setContext
+
+exports.context = context
+exports.effectDryMix = effectDryMix
+exports.effectWetMix = effectWetMix
+exports.convolver = convolver
+exports.compressor = compressor
+exports.masterGainNode = masterGainNode
+exports.effectLevelNode = effectLevelNode
+exports.filterNode = filterNode
+
+
+exports.timerWorker = timerWorker
+exports.startTime = startTime
 exports.loopLength = loopLength
 exports.tempoIncrease = tempoIncrease
 exports.tempoDecrease = tempoDecrease
@@ -373,6 +397,11 @@ exports.noteTime = noteTime
 exports.instruments = instruments
 exports.volumes = volumes
 exports.theBeat = theBeat
+
+
+
+exports.schedule = schedule
+exports.drawNote = drawNote
 
 
 //

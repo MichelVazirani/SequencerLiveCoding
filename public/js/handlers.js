@@ -1,6 +1,7 @@
 const drums = require('./drummachine')
 const irMod = require('./impulseResponse')
-const midiMod = require('./midi')
+const kitMod = require('./kit')
+// const midiMod = require('./midi')
 
 
 var mouseCapture = null;
@@ -164,33 +165,33 @@ function handleButtonMouseDown(event) {
     if (instrumentIndex == currentlyActiveInstrument)
         showCorrectNote( rhythmIndex, notes[rhythmIndex] );
 
-    drawNote(notes[rhythmIndex], rhythmIndex, instrumentIndex);
+    drums.drawNote(notes[rhythmIndex], rhythmIndex, instrumentIndex);
 
     if (newNoteValue) {
         switch(instrumentIndex) {
         case 0:  // Kick
-          playNote(currentKit.kickBuffer, false, 0,0,-2, 0.5 * drums.theBeat.effectMix, volumes[newNoteValue] * 1.0, kickPitch, 0);
+          playNote(kitMod.currentKit.kickBuffer, false, 0,0,-2, 0.5 * drums.theBeat.effectMix, drums.volumes[newNoteValue] * 1.0, kickPitch, 0);
           break;
 
         case 1:  // Snare
-          playNote(currentKit.snareBuffer, false, 0,0,-2, drums.theBeat.effectMix, volumes[newNoteValue] * 0.6, snarePitch, 0);
+          playNote(kitMod.currentKit.snareBuffer, false, 0,0,-2, drums.theBeat.effectMix, drums.volumes[newNoteValue] * 0.6, snarePitch, 0);
           break;
 
         case 2:  // Hihat
           // Pan the hihat according to sequence position.
-          playNote(currentKit.hihatBuffer, true, 0.5*rhythmIndex - 4, 0, -1.0, drums.theBeat.effectMix, volumes[newNoteValue] * 0.7, hihatPitch, 0);
+          playNote(kitMod.currentKit.hihatBuffer, true, 0.5*rhythmIndex - 4, 0, -1.0, drums.theBeat.effectMix, drums.volumes[newNoteValue] * 0.7, hihatPitch, 0);
           break;
 
         case 3:  // Tom 1
-          playNote(currentKit.tom1, false, 0,0,-2, drums.theBeat.effectMix, volumes[newNoteValue] * 0.6, tom1Pitch, 0);
+          playNote(currentKit.tom1, false, 0,0,-2, drums.theBeat.effectMix, drums.volumes[newNoteValue] * 0.6, tom1Pitch, 0);
           break;
 
         case 4:  // Tom 2
-          playNote(currentKit.tom2, false, 0,0,-2, drums.theBeat.effectMix, volumes[newNoteValue] * 0.6, tom2Pitch, 0);
+          playNote(currentKit.tom2, false, 0,0,-2, drums.theBeat.effectMix, drums.volumes[newNoteValue] * 0.6, tom2Pitch, 0);
           break;
 
         case 5:  // Tom 3
-          playNote(currentKit.tom3, false, 0,0,-2, drums.theBeat.effectMix, volumes[newNoteValue] * 0.6, tom3Pitch, 0);
+          playNote(currentKit.tom3, false, 0,0,-2, drums.theBeat.effectMix, drums.volumes[newNoteValue] * 0.6, tom3Pitch, 0);
           break;
         }
     }
@@ -203,10 +204,10 @@ function handleKitComboMouseDown(event) {
 }
 
 function handleKitMouseDown(event) {
-    var index = kitNamePretty.indexOf(event.target.innerHTML);
+    var index = kitMod.kitNamePretty.indexOf(event.target.innerHTML);
     drums.theBeat.kitIndex = index;
-    currentKit = kits[index];
-    document.getElementById('kitname').innerHTML = kitNamePretty[index];
+    kitMod.currentKit = kitMod.kits[index];
+    document.getElementById('kitname').innerHTML = kitMod.kitNamePretty[index];
 }
 
 function handleBodyMouseDown(event) {
@@ -270,8 +271,8 @@ function setEffect(index) {
     }
 
     drums.theBeat.effectIndex = index;
-    effectDryMix = irMod.impulseResponseInfoList[index].dryMix;
-    effectWetMix = irMod.impulseResponseInfoList[index].wetMix;
+    drums.effectDryMix = irMod.impulseResponseInfoList[index].dryMix;
+    drums.effectWetMix = irMod.impulseResponseInfoList[index].wetMix;
     convolver.buffer = irMod.impulseResponseList[index].buffer;
 
   // Hack - if the effect is meant to be entirely wet (not unprocessed signal)
@@ -318,10 +319,10 @@ function handleDemoMouseDown(event) {
 }
 
 function handlePlay(event) {
-    noteTime = 0.0;
-    startTime = context.currentTime + 0.005;
-    schedule();
-    timerWorker.postMessage("start");
+    drums.noteTime = 0.0;
+    drums.startTime = drums.context.currentTime + 0.005;
+    drums.schedule();
+    drums.timerWorker.postMessage("start");
 
     document.getElementById('play').classList.add('playing');
     document.getElementById('stop').classList.add('playing');
@@ -334,12 +335,12 @@ function handlePlay(event) {
 }
 
 function handleStop(event) {
-    timerWorker.postMessage("stop");
+    drums.timerWorker.postMessage("stop");
 
     var elOld = document.getElementById('LED_' + (drums.rhythmIndex + 14) % 16);
     elOld.src = 'images/LED_off.png';
 
-    midiMod.hideBeat( (drums.rhythmIndex + 14) % 16 );
+    // midiMod.hideBeat( (drums.rhythmIndex + 14) % 16 );
 
     drums.rhythmIndex = 0;
 
@@ -372,8 +373,8 @@ function handleLoadOk(event) {
     drums.theBeat = JSON.parse(elTextarea.value);
 
     // Set drumkit
-    currentKit = kits[drums.theBeat.kitIndex];
-    document.getElementById('kitname').innerHTML = kitNamePretty[drums.theBeat.kitIndex];
+    kitMod.currentKit = kitMod.kits[drums.theBeat.kitIndex];
+    document.getElementById('kitname').innerHTML = kitMod.kitNamePretty[drums.theBeat.kitIndex];
 
     // Set effect
     setEffect(drums.theBeat.effectIndex);

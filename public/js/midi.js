@@ -413,7 +413,3 @@ function controller(number, data) {
 
   }
 }
-
-
-
-exports.hideBeat = hideBeat

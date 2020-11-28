@@ -1,4 +1,5 @@
 const beatProfs = require('./beatProfiles')
+const drums = require('./drummachine')
 
 var impulseResponseInfoList = [
     // Impulse responses - each one represents a unique linear effect.
@@ -70,7 +71,7 @@ ImpulseResponse.prototype.load = function() {
     var asset = this;
 
     request.onload = function() {
-        context.decodeAudioData(request.response, loadedImpulseResponse.bind(asset) );
+        drums.context.decodeAudioData(request.response, loadedImpulseResponse.bind(asset) );
     }
 
     request.send();

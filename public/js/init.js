@@ -112,39 +112,41 @@ exports.initDrums = function() {
 
     // NOTE: THIS NOW RELIES ON THE MONKEYPATCH LIBRARY TO LOAD
     // IN CHROME AND SAFARI (until they release unprefixed)
-    context = new AudioContext();
+
+    // drums.context = new AudioContext();
+    drums.setContext(new AudioContext());
 
     var finalMixNode;
-    if (context.createDynamicsCompressor) {
+    if (drums.context.createDynamicsCompressor) {
         // Create a dynamics compressor to sweeten the overall mix.
-        compressor = context.createDynamicsCompressor();
-        compressor.connect(context.destination);
-        finalMixNode = compressor;
+        drums.compressor = drums.context.createDynamicsCompressor();
+        drums.compressor.connect(drums.context.destination);
+        finalMixNode = drums.compressor;
     } else {
         // No compressor available in this implementation.
-        finalMixNode = context.destination;
+        finalMixNode = drums.context.destination;
     }
 
     // create master filter node
-    filterNode = context.createBiquadFilter();
-    filterNode.type = "lowpass";
-    filterNode.frequency.value = 0.5 * context.sampleRate;
-    filterNode.Q.value = 1;
-    filterNode.connect(finalMixNode);
+    drums.filterNode = drums.context.createBiquadFilter();
+    drums.filterNode.type = "lowpass";
+    drums.filterNode.frequency.value = 0.5 * drums.context.sampleRate;
+    drums.filterNode.Q.value = 1;
+    drums.filterNode.connect(finalMixNode);
 
     // Create master volume.
-    masterGainNode = context.createGain();
-    masterGainNode.gain.value = 0.7; // reduce overall volume to avoid clipping
-    masterGainNode.connect(filterNode);
+    drums.masterGainNode = drums.context.createGain();
+    drums.masterGainNode.gain.value = 0.7; // reduce overall volume to avoid clipping
+    drums.masterGainNode.connect(drums.filterNode);
 
     // Create effect volume.
-    effectLevelNode = context.createGain();
-    effectLevelNode.gain.value = 1.0; // effect level slider controls this
-    effectLevelNode.connect(masterGainNode);
+    drums.effectLevelNode = drums.context.createGain();
+    drums.effectLevelNode.gain.value = 1.0; // effect level slider controls this
+    drums.effectLevelNode.connect(drums.masterGainNode);
 
     // Create convolver for effect
-    convolver = context.createConvolver();
-    convolver.connect(effectLevelNode);
+    drums.convolver = drums.context.createConvolver();
+    drums.convolver.connect(drums.effectLevelNode);
 
 
     var elKitCombo = document.getElementById('kitcombo');
@@ -164,11 +166,12 @@ exports.initDrums = function() {
     // Obtain a blob URL reference to our worker 'file'.
     var timerWorkerBlobURL = window.URL.createObjectURL(timerWorkerBlob);
 
-    timerWorker = new Worker(timerWorkerBlobURL);
-    timerWorker.onmessage = function(e) {
+    // timerWorker = new Worker(timerWorkerBlobURL);
+    drums.setTimerWorker(new Worker(timerWorkerBlobURL));
+    drums.timerWorker.onmessage = function(e) {
       schedule();
     };
-    timerWorker.postMessage('init'); // Start the worker.
+    drums.timerWorker.postMessage('init'); // Start the worker.
 
 }
 

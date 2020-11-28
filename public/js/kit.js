@@ -1,4 +1,5 @@
 const beatProfs = require('./beatProfiles')
+const drums = require('./drummachine')
 
 var kits;
 
@@ -109,7 +110,7 @@ Kit.prototype.loadSample = function(sampleID, url, mixToMono) {
     var kit = this;
 
     request.onload = function() {
-        context.decodeAudioData(request.response, decodedFunctions[sampleID].bind(kit));
+        drums.context.decodeAudioData(request.response, decodedFunctions[sampleID].bind(kit));
 
         kit.instrumentLoadCount++;
         if (kit.instrumentLoadCount == kit.instrumentCount) {
