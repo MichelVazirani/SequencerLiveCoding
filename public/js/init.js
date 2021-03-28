@@ -201,7 +201,8 @@ function initControls(timerWorker) {
     sliderIdNames.map(idName => seDoubleClickHandler(idName, handlersMod.handleSliderDoubleClick));
 
     // tool buttons
-    setMouseDownHandler('play', ev => handlersMod.handlePlay(timerWorker, ev));
+    // setMouseDownHandler('play', ev => handlersMod.handlePlay(timerWorker, ev));
+    setMouseDownHandler('play', handlersMod.handlePlay);
     setMouseDownHandler('stop', ev => handlersMod.handleStop(timerWorker, ev));
     setMouseDownHandler('save', handlersMod.handleSave);
     setMouseDownHandler('save_ok', handlersMod.handleSaveOk);
@@ -211,6 +212,10 @@ function initControls(timerWorker) {
     setMouseDownHandler('reset', handlersMod.handleReset);
     setMouseDownHandler('tempoinc', beatMod.tempoIncrease);
     setMouseDownHandler('tempodec', beatMod.tempoDecrease);
+    setMouseDownHandler('buttonConfButton', handlersMod.handleButtonConfig);
+    setMouseDownHandler('sendSomethingButton', handlersMod.handleSend);
+
+
 
     demos = ['demo1', 'demo2', 'demo3', 'demo4', 'demo5']
     demos.map(demoName => setMouseDownHandler(demoName, handlersMod.handleDemoMouseDown));

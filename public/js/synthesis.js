@@ -31,9 +31,9 @@ function synthCode(newNoteValue, rhythmIndex, instrumentIndex, theBeat) {
     var updatedCode = addLineForPointChange(currentCode,newNoteValue, rhythmIndex, instrumentIndex)
 
     socket.emit('code', {"code":updatedCode, "beat":theBeat});
-    
+
     // currently, if we get new code any time, we replace code with synthesized code
-    // TODO we need something a bit more tasteful - e.g. put new code in a "proposed change" box 
+    // TODO we need something a bit more tasteful - e.g. put new code in a "proposed change" box
     socket.on('newCode', function(c) {
         codeMirrorInstance.replaceRange(c, {line: 2, ch:0}, {line: codeMirrorInstance.lineCount()-2, ch: 0});
     });
@@ -68,7 +68,7 @@ function isValidBeat(beat) {
             Array.isArray(beat['rhythm'+i.toString()]) &&
             beat['rhythm'+i.toString()].every((v) => v <=2 && v >=0);
     }
-    console.log(valid);
+    // console.log(valid);
     return valid;
 }
 

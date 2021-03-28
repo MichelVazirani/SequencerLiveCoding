@@ -456,10 +456,12 @@ const impulseMod = require('./impulse')
 const playMod = require('./play')
 const slidersMod = require('./sliders')
 const contextMod = require('./context')
+const matrixMod = require('./matrix')
 
 
 var mouseCapture = null;
 var mouseCaptureOffset = 0;
+
 
 function handleSliderMouseDown(event) {
     mouseCapture = event.target.id;
@@ -563,6 +565,7 @@ function handleButtonMouseDown(event) {
         showCorrectNote( rhythmIndex, notes[rhythmIndex] );
 
     drawMod.drawNote(notes[rhythmIndex], rhythmIndex, instrumentIndex);
+    matrixMod.drawNote(notes[rhythmIndex], rhythmIndex, instrumentIndex);
 
     if (newNoteValue) {
         switch(instrumentIndex) {
@@ -822,6 +825,74 @@ function handleReset(event) {
 
 
 
+async function handleButtonConfig(event) {
+
+  await matrixMod.configure();
+
+  // //TESTING FEATHER STUFF
+  //
+  // if ("serial" in navigator) {
+  //   // The Web Serial API is supported.
+  //   console.log("serial")
+  //
+  //   // Prompt user to select any serial port.
+  //   port = await navigator.serial.requestPort();
+  //   console.log(port.getInfo())
+  //
+  //   try {await port.open({ baudRate: 9600, dataBits: 8, stopBits: 1, parity: "none"});
+  //   } catch (e) {console.log(e)}
+  //
+  //   const textDecoder = new TextDecoderStream();
+  //   const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+  //   const reader = textDecoder.readable.getReader();
+  //
+  //
+  //
+  //   // Listen to data coming from the serial device.
+  //   while (true) {
+  //     const { value, done } = await reader.read();
+  //     if (done) {
+  //       // Allow the serial port to be closed later.
+  //       reader.releaseLock();
+  //       break;
+  //     }
+  //     // value is a string.
+  //     console.log(value);
+  //
+  //   }
+  // }
+}
+
+var textEncoder;
+var writableStreamClosed;
+var writer;
+
+async function handleSend(event) {
+
+  console.log("sending");
+
+  // const writer = port.writable.getWriter();
+  // const data = new Uint8Array([104, 101, 108, 108, 111]); // hello
+  // await writer.write(data);
+
+  if (!textEncoder) {
+    textEncoder = new TextEncoderStream();
+    writableStreamClosed = textEncoder.readable.pipeTo(port.writable);
+    writer = textEncoder.writable.getWriter();
+  }
+
+
+  // const textEncoder = new TextEncoderStream();
+  // const writableStreamClosed = textEncoder.readable.pipeTo(port.writable);
+  // const writer = textEncoder.writable.getWriter();
+
+  await writer.write("hello\r\n");
+
+  // Allow the serial port to be closed later.
+  // writer.releaseLock();
+  // writer.close();
+
+}
 
 
 
@@ -846,13 +917,15 @@ exports.handleLoad = handleLoad;
 exports.handleLoadOk = handleLoadOk;
 exports.handleLoadCancel = handleLoadCancel;
 exports.handleReset = handleReset;
+exports.handleButtonConfig = handleButtonConfig;
+exports.handleSend = handleSend;
 exports.loadBeat = loadBeat;
 
 
 
 //
 
-},{"./beat":1,"./context":3,"./draw":4,"./impulse":6,"./kit":8,"./play":10,"./sliders":11,"./synthesis":12}],6:[function(require,module,exports){
+},{"./beat":1,"./context":3,"./draw":4,"./impulse":6,"./kit":8,"./matrix":10,"./play":11,"./sliders":12,"./synthesis":13}],6:[function(require,module,exports){
 const beatMod = require('./beat')
 const contextMod = require('./context')
 const slidersMod = require('./sliders')
@@ -984,7 +1057,7 @@ exports.impulseResponseInfoList = impulseResponseInfoList;
 
 //
 
-},{"./beat":1,"./context":3,"./sliders":11}],7:[function(require,module,exports){
+},{"./beat":1,"./context":3,"./sliders":12}],7:[function(require,module,exports){
 const beatMod = require('./beat')
 const drawMod = require('./draw')
 const kitMod = require('./kit')
@@ -1188,7 +1261,8 @@ function initControls(timerWorker) {
     sliderIdNames.map(idName => seDoubleClickHandler(idName, handlersMod.handleSliderDoubleClick));
 
     // tool buttons
-    setMouseDownHandler('play', ev => handlersMod.handlePlay(timerWorker, ev));
+    // setMouseDownHandler('play', ev => handlersMod.handlePlay(timerWorker, ev));
+    setMouseDownHandler('play', handlersMod.handlePlay);
     setMouseDownHandler('stop', ev => handlersMod.handleStop(timerWorker, ev));
     setMouseDownHandler('save', handlersMod.handleSave);
     setMouseDownHandler('save_ok', handlersMod.handleSaveOk);
@@ -1198,6 +1272,10 @@ function initControls(timerWorker) {
     setMouseDownHandler('reset', handlersMod.handleReset);
     setMouseDownHandler('tempoinc', beatMod.tempoIncrease);
     setMouseDownHandler('tempodec', beatMod.tempoDecrease);
+    setMouseDownHandler('buttonConfButton', handlersMod.handleButtonConfig);
+    setMouseDownHandler('sendSomethingButton', handlersMod.handleSend);
+
+
 
     demos = ['demo1', 'demo2', 'demo3', 'demo4', 'demo5']
     demos.map(demoName => setMouseDownHandler(demoName, handlersMod.handleDemoMouseDown));
@@ -1254,7 +1332,7 @@ function makeKitList() {
 
 //
 
-},{"./beat":1,"./context":3,"./draw":4,"./handlers":5,"./impulse":6,"./kit":8,"./play":10}],8:[function(require,module,exports){
+},{"./beat":1,"./context":3,"./draw":4,"./handlers":5,"./impulse":6,"./kit":8,"./play":11}],8:[function(require,module,exports){
 const contextMod = require('./context')
 const beatMod = require('./beat')
 
@@ -1484,7 +1562,153 @@ window.onload = function(){
   init.initDrums(cmInstance);
 }
 
-},{"./codeManager":2,"./init":7,"./synthesis":12}],10:[function(require,module,exports){
+},{"./codeManager":2,"./init":7,"./synthesis":13}],10:[function(require,module,exports){
+const beatMod = require('./beat')
+const kitMod = require('./kit')
+const drawMod = require('./draw')
+const synthMod = require('./synthesis')
+const playMod = require('./play')
+
+var port;
+
+
+async function configure() {
+  //TESTING FEATHER STUFF
+
+  if ("serial" in navigator) {
+    // The Web Serial API is supported.
+    console.log("serial")
+
+    // Prompt user to select any serial port.
+    port = await navigator.serial.requestPort();
+    console.log(port.getInfo())
+
+    try {await port.open({ baudRate: 9600, dataBits: 8, stopBits: 1, parity: "none"});
+    } catch (e) {console.log(e)}
+
+    const textDecoder = new TextDecoderStream();
+    const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+    const reader = textDecoder.readable.getReader();
+
+    var command;
+    var elID;
+    var beatNum;
+
+    // Listen to data coming from the serial device.
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) {
+        // Allow the serial port to be closed later.
+        reader.releaseLock();
+        break;
+      }
+      // value is a string.
+      console.log(value);
+      command = value.split(" ");
+
+      if (command[0] === "bp") {
+
+        elID = "";
+        if (command[2] < 2) {
+          elID += "Tom1_";
+        } else if (command[2] >= 2 && command[2] < 4) {
+          elID += "HiHat_";
+        } else if (command[2] >= 4 && command[2] < 6) {
+          elID += "Snare_";
+        } else if (command[2] >= 6) {
+          elID += "Kick_";
+        }
+
+        beatNum = ((command[2]%2)*8) + parseInt(command[1]);
+        elID += beatNum.toString();
+
+        activateNote(elID);
+      }
+
+    }
+  }
+}
+
+
+
+function drawNote(newNoteValue, rhythmIndex, instrumentIndex) {
+    console.log(newNoteValue)
+    console.log(rhythmIndex)
+    console.log(instrumentIndex)
+}
+
+
+
+
+function activateNote(elId) {
+    var notes = beatMod.theBeat.rhythm1;
+
+    var instrumentIndex;
+    var rhythmIndex;
+
+    rhythmIndex = elId.substr(elId.indexOf('_') + 1, 2);
+    instrumentIndex = kitMod.instruments.indexOf(elId.substr(0, elId.indexOf('_')));
+
+    switch (instrumentIndex) {
+        case 0: notes = beatMod.theBeat.rhythm1; break;
+        case 1: notes = beatMod.theBeat.rhythm2; break;
+        case 2: notes = beatMod.theBeat.rhythm3; break;
+        case 3: notes = beatMod.theBeat.rhythm4; break;
+        case 4: notes = beatMod.theBeat.rhythm5; break;
+        case 5: notes = beatMod.theBeat.rhythm6; break;
+    }
+
+    var newNoteValue = (notes[rhythmIndex] + 1) % 3;
+
+    notes[rhythmIndex] = newNoteValue
+
+    if (instrumentIndex == currentlyActiveInstrument)
+        showCorrectNote( rhythmIndex, notes[rhythmIndex] );
+
+    drawMod.drawNote(notes[rhythmIndex], rhythmIndex, instrumentIndex);
+
+    // if (newNoteValue) {
+    //     switch(instrumentIndex) {
+    //     case 0:  // Kick
+    //       playMod.playNote(kitMod.currentKit.kickBuffer, false, 0,0,-2, 0.5 * beatMod.theBeat.effectMix, kitMod.volumes[newNoteValue] * 1.0, kitMod.kickPitch, 0);
+    //       break;
+    //
+    //     case 1:  // Snare
+    //       playMod.playNote(kitMod.currentKit.snareBuffer, false, 0,0,-2, beatMod.theBeat.effectMix, kitMod.volumes[newNoteValue] * 0.6, kitMod.snarePitch, 0);
+    //       break;
+    //
+    //     case 2:  // Hihat
+    //       // Pan the hihat according to sequence position.
+    //       playMod.playNote(kitMod.currentKit.hihatBuffer, true, 0.5*rhythmIndex - 4, 0, -1.0, beatMod.theBeat.effectMix, kitMod.volumes[newNoteValue] * 0.7, kitMod.hihatPitch, 0);
+    //       break;
+    //
+    //     case 3:  // Tom 1
+    //       playMod.playNote(kitMod.currentKit.tom1, false, 0,0,-2, beatMod.theBeat.effectMix, kitMod.volumes[newNoteValue] * 0.6, kitMod.tom1Pitch, 0);
+    //       break;
+    //
+    //     case 4:  // Tom 2
+    //       playMod.playNote(kitMod.currentKit.tom2, false, 0,0,-2, beatMod.theBeat.effectMix, kitMod.volumes[newNoteValue] * 0.6, kitMod.tom2Pitch, 0);
+    //       break;
+    //
+    //     case 5:  // Tom 3
+    //       playMod.playNote(kitMod.currentKit.tom3, false, 0,0,-2, beatMod.theBeat.effectMix, kitMod.volumes[newNoteValue] * 0.6, kitMod.tom3Pitch, 0);
+    //       break;
+    //     }
+    // }
+
+    synthMod.synthCode(newNoteValue, rhythmIndex, instrumentIndex, beatMod.theBeat)
+}
+
+
+
+
+
+
+//functions
+
+exports.configure = configure;
+
+},{"./beat":1,"./draw":4,"./kit":8,"./play":11,"./synthesis":13}],11:[function(require,module,exports){
 const beatMod = require('./beat')
 const synthMod = require('./synthesis')
 const drawMod = require('./draw')
@@ -1646,7 +1870,7 @@ exports.noteTime = noteTime;
 
 //
 
-},{"./beat":1,"./context":3,"./draw":4,"./impulse":6,"./kit":8,"./synthesis":12}],11:[function(require,module,exports){
+},{"./beat":1,"./context":3,"./draw":4,"./impulse":6,"./kit":8,"./synthesis":13}],12:[function(require,module,exports){
 const beatMod = require('./beat')
 const kitMod = require('./kit')
 const contextMod = require('./context')
@@ -1697,7 +1921,7 @@ function sliderSetValue(slider, value) {
 // functions
 exports.sliderSetValue = sliderSetValue;
 
-},{"./beat":1,"./context":3,"./kit":8}],12:[function(require,module,exports){
+},{"./beat":1,"./context":3,"./kit":8}],13:[function(require,module,exports){
 //We pull this in on init, which allows us to grab code as the drum machine runs
 var codeMirrorInstance = null
 
@@ -1731,9 +1955,9 @@ function synthCode(newNoteValue, rhythmIndex, instrumentIndex, theBeat) {
     var updatedCode = addLineForPointChange(currentCode,newNoteValue, rhythmIndex, instrumentIndex)
 
     socket.emit('code', {"code":updatedCode, "beat":theBeat});
-    
+
     // currently, if we get new code any time, we replace code with synthesized code
-    // TODO we need something a bit more tasteful - e.g. put new code in a "proposed change" box 
+    // TODO we need something a bit more tasteful - e.g. put new code in a "proposed change" box
     socket.on('newCode', function(c) {
         codeMirrorInstance.replaceRange(c, {line: 2, ch:0}, {line: codeMirrorInstance.lineCount()-2, ch: 0});
     });
@@ -1768,7 +1992,7 @@ function isValidBeat(beat) {
             Array.isArray(beat['rhythm'+i.toString()]) &&
             beat['rhythm'+i.toString()].every((v) => v <=2 && v >=0);
     }
-    console.log(valid);
+    // console.log(valid);
     return valid;
 }
 
