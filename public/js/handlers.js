@@ -115,7 +115,9 @@ function handleButtonMouseDown(event) {
         showCorrectNote( rhythmIndex, notes[rhythmIndex] );
 
     drawMod.drawNote(notes[rhythmIndex], rhythmIndex, instrumentIndex);
-    matrixMod.drawNote(notes[rhythmIndex], rhythmIndex, instrumentIndex);
+    if (matrixMod.port) {
+        matrixMod.drawNote(notes[rhythmIndex], rhythmIndex, instrumentIndex);
+    }
 
     if (newNoteValue) {
         switch(instrumentIndex) {
@@ -381,33 +383,6 @@ async function handleButtonConfig(event) {
 
 
 
-async function handleSend(event) {
-
-  console.log("sending");
-
-  // const writer = port.writable.getWriter();
-  // const data = new Uint8Array([104, 101, 108, 108, 111]); // hello
-  // await writer.write(data);
-
-  if (!textEncoder) {
-    textEncoder = new TextEncoderStream();
-    writableStreamClosed = textEncoder.readable.pipeTo(port.writable);
-    writer = textEncoder.writable.getWriter();
-  }
-
-
-  // const textEncoder = new TextEncoderStream();
-  // const writableStreamClosed = textEncoder.readable.pipeTo(port.writable);
-  // const writer = textEncoder.writable.getWriter();
-
-  await writer.write("hello\r\n");
-
-  // Allow the serial port to be closed later.
-  // writer.releaseLock();
-  // writer.close();
-
-}
-
 
 
 
@@ -432,7 +407,6 @@ exports.handleLoadOk = handleLoadOk;
 exports.handleLoadCancel = handleLoadCancel;
 exports.handleReset = handleReset;
 exports.handleButtonConfig = handleButtonConfig;
-exports.handleSend = handleSend;
 exports.loadBeat = loadBeat;
 
 

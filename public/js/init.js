@@ -213,7 +213,6 @@ function initControls(timerWorker) {
     setMouseDownHandler('tempoinc', beatMod.tempoIncrease);
     setMouseDownHandler('tempodec', beatMod.tempoDecrease);
     setMouseDownHandler('buttonConfButton', handlersMod.handleButtonConfig);
-    setMouseDownHandler('sendSomethingButton', handlersMod.handleSend);
 
 
 

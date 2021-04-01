@@ -4,6 +4,7 @@ const drawMod = require('./draw')
 const kitMod = require('./kit')
 const impulseMod = require('./impulse')
 const contextMod = require('./context')
+const matrixMod = require('./matrix')
 
 var noteTime = 0.0;
 
@@ -112,6 +113,7 @@ function schedule() {
         if (noteTime != drawMod.lastDrawTime) {
             drawMod.setLastDrawTime(noteTime);
             drawMod.drawPlayhead((beatMod.rhythmIndex + 15) % 16);
+            // matrixMod.drawPlayhead((beatMod.rhythmIndex + 15) % 16);
         }
 
         advanceNote();

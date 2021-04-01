@@ -8,7 +8,11 @@ var port;
 var textEncoder;
 var writableStreamClosed;
 var writer;
+var configured = false;
 
+var textDecoder;
+var readableStreamClosed;
+var reader;
 
 async function configure() {
   //TESTING FEATHER STUFF
@@ -21,60 +25,70 @@ async function configure() {
     port = await navigator.serial.requestPort();
     console.log(port.getInfo())
 
-    try {await port.open({ baudRate: 9600, dataBits: 8, stopBits: 1, parity: "none"});
-    } catch (e) {console.log(e)}
-
-    const textDecoder = new TextDecoderStream();
-    const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
-    const reader = textDecoder.readable.getReader();
-
-    var command;
-    var elID;
-    var beatNum;
-
-    // Listen to data coming from the serial device.
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) {
-        // Allow the serial port to be closed later.
-        reader.releaseLock();
-        break;
-      }
-      // value is a string.
-      console.log(value);
-      command = value.split(" ");
-
-      if (command[0] === "bp") {
-
-        elID = "";
-        if (command[2] < 2) {
-          elID += "Tom1_";
-        } else if (command[2] >= 2 && command[2] < 4) {
-          elID += "HiHat_";
-        } else if (command[2] >= 4 && command[2] < 6) {
-          elID += "Snare_";
-        } else if (command[2] >= 6) {
-          elID += "Kick_";
-        }
-
-        beatNum = ((command[2]%2)*8) + parseInt(command[1]);
-        elID += beatNum.toString();
-
-        activateNote(elID);
-      }
-
+    try {
+      await port.open({ baudRate: 9600, dataBits: 8, stopBits: 1, parity: "none"});
+      exports.port = port;
+    } catch (e) {
+      console.log(e)
     }
+
+    textDecoder = new TextDecoderStream();
+    readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+    reader = textDecoder.readable.getReader();
+
+    if (!textEncoder) {
+      textEncoder = new TextEncoderStream();
+      writableStreamClosed = textEncoder.readable.pipeTo(port.writable);
+      writer = textEncoder.writable.getWriter();
+    }
+
+    updateFullGrid()
+    readLoop()
   }
 }
 
 
 
-function drawNote(newNoteValue, rhythmIndex, instrumentIndex) {
-    console.log(newNoteValue)
-    console.log(rhythmIndex)
-    console.log(instrumentIndex)
-}
+async function readLoop() {
+  var command;
+  var elID;
+  var beatNum;
 
+  // Listen to data coming from the serial device.
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) {
+      // Allow the serial port to be closed later.
+      reader.releaseLock();
+      break;
+    }
+    // value is a string.
+    console.log(value);
+    command = value.split(" ");
+
+    if (command[0] === "bp") {
+
+      elID = "";
+      if (command[2] < 2) {
+        elID += "Tom1_";
+      } else if (command[2] >= 2 && command[2] < 4) {
+        elID += "HiHat_";
+      } else if (command[2] >= 4 && command[2] < 6) {
+        elID += "Snare_";
+      } else if (command[2] >= 6) {
+        elID += "Kick_";
+      }
+
+      beatNum = ((command[2]%2)*8) + parseInt(command[1]);
+      elID += beatNum.toString();
+
+
+      if (elID !== "NaN")
+        activateNote(elID);
+    }
+
+  }
+}
 
 
 
@@ -104,44 +118,79 @@ function activateNote(elId) {
         showCorrectNote( rhythmIndex, notes[rhythmIndex] );
 
     drawMod.drawNote(notes[rhythmIndex], rhythmIndex, instrumentIndex);
-
-    // if (newNoteValue) {
-    //     switch(instrumentIndex) {
-    //     case 0:  // Kick
-    //       playMod.playNote(kitMod.currentKit.kickBuffer, false, 0,0,-2, 0.5 * beatMod.theBeat.effectMix, kitMod.volumes[newNoteValue] * 1.0, kitMod.kickPitch, 0);
-    //       break;
-    //
-    //     case 1:  // Snare
-    //       playMod.playNote(kitMod.currentKit.snareBuffer, false, 0,0,-2, beatMod.theBeat.effectMix, kitMod.volumes[newNoteValue] * 0.6, kitMod.snarePitch, 0);
-    //       break;
-    //
-    //     case 2:  // Hihat
-    //       // Pan the hihat according to sequence position.
-    //       playMod.playNote(kitMod.currentKit.hihatBuffer, true, 0.5*rhythmIndex - 4, 0, -1.0, beatMod.theBeat.effectMix, kitMod.volumes[newNoteValue] * 0.7, kitMod.hihatPitch, 0);
-    //       break;
-    //
-    //     case 3:  // Tom 1
-    //       playMod.playNote(kitMod.currentKit.tom1, false, 0,0,-2, beatMod.theBeat.effectMix, kitMod.volumes[newNoteValue] * 0.6, kitMod.tom1Pitch, 0);
-    //       break;
-    //
-    //     case 4:  // Tom 2
-    //       playMod.playNote(kitMod.currentKit.tom2, false, 0,0,-2, beatMod.theBeat.effectMix, kitMod.volumes[newNoteValue] * 0.6, kitMod.tom2Pitch, 0);
-    //       break;
-    //
-    //     case 5:  // Tom 3
-    //       playMod.playNote(kitMod.currentKit.tom3, false, 0,0,-2, beatMod.theBeat.effectMix, kitMod.volumes[newNoteValue] * 0.6, kitMod.tom3Pitch, 0);
-    //       break;
-    //     }
-    // }
-
     synthMod.synthCode(newNoteValue, rhythmIndex, instrumentIndex, beatMod.theBeat)
+    drawNote(notes[rhythmIndex], rhythmIndex, instrumentIndex);
+}
+
+
+function drawNote(newNoteValue, rhythmIndex, instrumentIndex) {
+
+    if (instrumentIndex < 4) {
+      var y_base = ((-2)*instrumentIndex) + 6
+      var y = y_base + Math.floor(rhythmIndex/8);
+      var x = rhythmIndex % 8;
+
+      var data = "light " + x.toString() + " " + y.toString() + " " + newNoteValue.toString() + "\r\n";
+
+      writer.write(data);
+    }
+}
+
+function updateFullGrid() {
+  var notes;
+  for (inst = 0; inst < 4; inst++){
+    switch (inst) {
+        case 0: notes = beatMod.theBeat.rhythm1; break;
+        case 1: notes = beatMod.theBeat.rhythm2; break;
+        case 2: notes = beatMod.theBeat.rhythm3; break;
+        case 3: notes = beatMod.theBeat.rhythm4; break;
+    }
+    for (rhythm = 0; rhythm < 16; rhythm++) {
+        drawNote(notes[rhythm], rhythm, inst);
+    }
+  }
+}
+
+function blinkNote(rhythmIndex, instrumentIndex) {
+    console.log("blinking")
+    if (instrumentIndex < 4) {
+      var y_base = ((-2)*instrumentIndex) + 6
+      var y = y_base + Math.floor(rhythmIndex/8);
+      var x = rhythmIndex % 8;
+
+      var data = "blink " + x.toString() + " " + y.toString() + "\r\n";
+
+      console.log("data:", data)
+
+      writer.write(data);
+    }
+}
+
+
+function drawPlayhead(xindex) {
+  for (inst = 0; inst < 4; inst++){
+    switch (inst) {
+        case 0: notes = beatMod.theBeat.rhythm1; break;
+        case 1: notes = beatMod.theBeat.rhythm2; break;
+        case 2: notes = beatMod.theBeat.rhythm3; break;
+        case 3: notes = beatMod.theBeat.rhythm4; break;
+    }
+    if (notes[xindex] === 0) {
+      blinkNote(xindex, inst)
+    }
+    var lastIndex = (xindex + 15) % 16;
+    // await drawNote(notes[lastIndex], lastIndex, inst);
+  }
 }
 
 
 
-
+//variables
+exports.port = port;
 
 
 //functions
 
 exports.configure = configure;
+exports.drawNote = drawNote;
+exports.drawPlayhead = drawPlayhead;
