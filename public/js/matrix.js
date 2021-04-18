@@ -42,7 +42,7 @@ async function configure() {
       writer = textEncoder.writable.getWriter();
     }
 
-    updateFullGrid()
+    redrawAllNotes()
     readLoop()
   }
 }
@@ -123,33 +123,42 @@ function activateNote(elId) {
 }
 
 
-function drawNote(newNoteValue, rhythmIndex, instrumentIndex) {
+function convertToGridCoords(rhythmIndex, instrumentIndex){
+  var y_base = ((-2)*instrumentIndex) + 6
+  var y = y_base + Math.floor(rhythmIndex/8);
+  var x = rhythmIndex % 8;
+  return [x,y]
+}
 
+async function drawNote(newNoteValue, rhythmIndex, instrumentIndex) {
     if (instrumentIndex < 4) {
-      var y_base = ((-2)*instrumentIndex) + 6
-      var y = y_base + Math.floor(rhythmIndex/8);
-      var x = rhythmIndex % 8;
-
+      let [x, y] = convertToGridCoords(rhythmIndex, instrumentIndex);
       var data = "light " + x.toString() + " " + y.toString() + " " + newNoteValue.toString() + "\r\n";
 
-      writer.write(data);
+      await writer.write(data);
     }
 }
 
-function updateFullGrid() {
-  var notes;
-  for (inst = 0; inst < 4; inst++){
-    switch (inst) {
-        case 0: notes = beatMod.theBeat.rhythm1; break;
-        case 1: notes = beatMod.theBeat.rhythm2; break;
-        case 2: notes = beatMod.theBeat.rhythm3; break;
-        case 3: notes = beatMod.theBeat.rhythm4; break;
+async function redrawAllNotes() {
+
+  try {
+    var dataStr = "";
+
+    for (instrumentIndex = 0; instrumentIndex < 4; instrumentIndex++) { //6 rhythm patterns in theBeat
+        for (rhythmIndex = 0; rhythmIndex < 16; rhythmIndex++)  { //16 beat subdivisions
+          let [x, y] = convertToGridCoords(rhythmIndex, instrumentIndex);
+          let newNoteValue = (beatMod.theBeat['rhythm'+(instrumentIndex+1).toString()][rhythmIndex]).toString();
+          dataStr = dataStr + x.toString() + "-" + y.toString() + "-" + newNoteValue + "|";
+        }
     }
-    for (rhythm = 0; rhythm < 16; rhythm++) {
-        drawNote(notes[rhythm], rhythm, inst);
-    }
+    dataStr = "redraw_all |" + dataStr.slice(0,-1) + "\r\n";
+    await writer.write(dataStr);
+
+  } catch (e) {
+    console.log(e);
   }
 }
+
 
 function blinkNote(rhythmIndex, instrumentIndex) {
     console.log("blinking")
@@ -185,6 +194,7 @@ function drawPlayhead(xindex) {
 
 
 
+
 //variables
 exports.port = port;
 
@@ -194,3 +204,4 @@ exports.port = port;
 exports.configure = configure;
 exports.drawNote = drawNote;
 exports.drawPlayhead = drawPlayhead;
+exports.redrawAllNotes = redrawAllNotes;

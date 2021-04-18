@@ -1,8 +1,12 @@
 //We pull this in on init, which allows us to grab code as the drum machine runs
 var codeMirrorInstance = null
 
+var mostRecentCode;
+
 function setCMInstance (cm) {
     codeMirrorInstance = cm;
+    mostRecentCode = codeMirrorInstance.getValue()
+
 }
 
 function addLineForPointChange(currentCode,newNoteValue, rhythmIndex, instrumentIndex) {
@@ -43,14 +47,16 @@ function updatePatternFromCode(currentBeat, rhythmIndex){
     //every time we advance a time step, pull latest code and update beat object
     var updatedCode = codeMirrorInstance.getValue()
     try {
-        //TODO if(codeChanged) {
-        let f = new Function("theBeat", "rhythmIndex", '"use strict"; ' + updatedCode + ' return (genBeat(theBeat, rhythmIndex));');
-        let newBeat = f(currentBeat, rhythmIndex);
-        for (i = 1; i <= 6; i++) {
-            newBeat['rhythm'+i.toString()] = newBeat['rhythm'+i.toString()].map((note) => {if (Number.isNaN(note)) {return 0;} else {return note}});
-        }
-        if (isValidBeat(newBeat)) { // && theBeat != newBeat){
-            return newBeat;
+        if (updatedCode != mostRecentCode){
+          mostRecentCode = updatedCode;
+          let f = new Function("theBeat", "rhythmIndex", '"use strict"; ' + updatedCode + ' return (genBeat(theBeat, rhythmIndex));');
+          let newBeat = f(currentBeat, rhythmIndex);
+          for (i = 1; i <= 6; i++) {
+              newBeat['rhythm'+i.toString()] = newBeat['rhythm'+i.toString()].map((note) => {if (Number.isNaN(note)) {return 0;} else {return note}});
+          }
+          if (isValidBeat(newBeat)) { // && theBeat != newBeat){
+              return newBeat;
+          }
         }
     }
     catch(err) {
